@@ -8,14 +8,22 @@ require('mkee')(Queue)
 
 function Queue(options){
   this.element = document.getElementById(options.prefix + '-queue')
+  this.element.innerHTML = this.templates.main()
+  this.queueEl = this.element.querySelector('ul')
+  
   this.on('filestream', this.onFileStream.bind(this))
 }
 
 Queue.prototype.onFileStream = function onFileStream(path, stat, stream){
-  var downloader = this.element
-  downloader.innerHTML = this.templates.progress({path: path})
-  var progressEl = downloader.querySelector('.progress-bar')
+
   var startTime = +(new Date)
+
+  var downloader = document.createElement('li')
+  this.queueEl.appendChild(downloader)
+
+  downloader.innerHTML = this.templates.progress({path: path})
+
+  var progressEl = downloader.querySelector('.progress-bar')
   var loadedEl = downloader.querySelector('.stats-loaded')
   var totalEl = downloader.querySelector('.stats-total')
   var rateEl = downloader.querySelector('.stats-rate')
@@ -60,11 +68,12 @@ Queue.prototype.onFileStream = function onFileStream(path, stat, stream){
 
     elapsedEl.innerHTML = elapsed_min + ' m ' + elapsed_sec + ' s '
   })
-
 }
 
 Queue.prototype.templates = {
-  main: doT.compile('')
+  main: doT.compile(''
+  +'<ul></ul>'
+  )
   , progress: doT.compile(''
   +'<div>'
   +'  <h3>{{= it.path }}</h3>'

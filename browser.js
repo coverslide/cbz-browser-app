@@ -1,5 +1,5 @@
 var parseUrl = require('url').parse
-var FileSocketClient = require('filesocket-client')
+var WSFTPClient = require('wsftp-client')
 
 var document = require('global/document')
 var bytes = require('bytes')
@@ -17,37 +17,28 @@ function Browser(options){
 
   this.element.innerHTML = this.templates.main()
 
-  this.directoryHandler = this.onDirectory.bind(this)
   this.clickHandler = this.onClick.bind(this)
   this.cache = {}
   this.firstLoad = true
 
-  this.fsclient = new FileSocketClient('ws://' + window.location.host + '/comics', {reconnect: true})
+  this.fsclient = new WSFTPClient(options.wsftp || ('ws://' + window.location.host + '/comics'))
+  this.requestDirectory(this.element, '/')
+
+  this.element.addEventListener('click', this.clickHandler, false)
 
   var _this = this
-  this.fsclient.on('connect', function(e){
-    console.log(e)
-    if(_this.firstLoad){
-      _this.element.addEventListener('click', _this.clickHandler)
-      _this.requestDirectory(_this.element, '/', _this.directoryHandler)
-    }
-  })
-
-  this.fsclient.on('disconnect', function(e){
-    console.log(e)
-  })
 }
 
 Browser.prototype.helpers = {bytes: bytes}
 
-Browser.prototype.requestDirectory = function(parent, url, cb){
+Browser.prototype.requestDirectory = function(parent, url){
   if(url in this.cache)
     return cb(null, parent, url, this.cache[url])
   var _this = this
-  this.fsclient.requestDirectory(url, function(err, obj){
-    if(err) return cb(err) 
-    var files = Object.keys(obj).map(function(name){
-      var file = obj[name].stat
+  this.fsclient.request(url, function(err, stat, stats){
+    if(err) return cb(err)
+    var files = Object.keys(stats).map(function(name){
+      var file = stats[name].stat
       file.name = name
       return file
     }).filter(function(file){
@@ -59,6 +50,17 @@ Browser.prototype.requestDirectory = function(parent, url, cb){
     _this.cache[url] = files
     cb(err, parent, url, files)
   })
+
+  function cb(err, parent, url, files){
+    _this.firstLoad = false
+    if(err) _this.emit('error', err)
+    var data = {
+      root: url
+      , files: files
+    }
+    parent.setAttribute('data-opened', true)
+    parent.querySelector('.children').innerHTML = _this.templates.listing.call(_this, data)
+  }
 }
 
 function naturalComparison(str){
@@ -70,25 +72,17 @@ function naturalComparison(str){
   })
 }
 
-Browser.prototype.onDirectory = function(err, parent, url, files){
-  this.firstLoad = false
-  if(err) return
-  var data = {
-    root: url
-    , files: files
-  }
-  parent.setAttribute('data-opened', true)
-  parent.querySelector('.children').innerHTML = this.templates.listing.call(this, data)
-}
-
 Browser.prototype.requestFile = function(url){
   var _this = this
-  this.fsclient.requestFile(url, {bufferSize: 1024 }, function(err, stat, stream){
-    stream.on('data', function(){
-      console.log(arguments)
-    })
-    if(err) _this.emit('error', err)
-    _this.emit('file', url, stat, stream)
+  if(url in _this.cache)
+    _this.emit('file', url, _this.cache[url])
+  this.fsclient.request(url, function(err, stat, stream){
+    if(err) return _this.emit('error', err)
+    var data = {
+      stat: stat
+      , stream: stream
+    }
+    _this.emit('file', url, data)
   })
 }
 
