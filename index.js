@@ -30,9 +30,6 @@ function CbzApp(options){
   this.prefix = options.prefix
 
   this.parentElement.innerHTML = this.templates.appSkeleton.call(this)
-  this.element = 
-
-  this.fileHandler = this.onFile.bind(this)
 
   options.app = this
 
@@ -44,18 +41,32 @@ function CbzApp(options){
   this.queue = new Queue(options)
 
   this.toolbar.toggleBrowser()
-  this.browser.on('file', this.fileHandler)
+  this.browser.on('file', this.fileHandler.bind(this))
+  this.browser.on('filestat', this.fileStatHandler.bind(this))
+  this.queue.on('filechunk', this.fileChunkHandler.bind(this))
 }
 
-CbzApp.prototype.onFile = function(url, data){
+CbzApp.prototype.fileStatHandler = function(url, data){
+  this.queue.emit('filestat', url, data)
+}
+
+CbzApp.prototype.fileChunkHandler = function(url, file, offset, length){
+  this.browser.requestFileChunk(url, file, offset, length)
+}
+
+CbzApp.prototype.fileHandler = function(url, data){
   var _this = this
   var stat = data.stat
   var stream = data.stream
   this.queue.emit('filestream', url, stat, stream)
-  var unzipper = new PkzipParser(stream) 
+  var unzipper = new PkzipParser() 
+  stream.pipe(unzipper)
   unzipper.on('file', function(status){
+
     if(status.compressionType == 8){ //deflate algorithm
-      var inflateStream = new InflateStream(status.stream)
+      var inflateStream = new InflateStream()
+      status.stream.pipe(inflateStream)
+      inflateStream.on('error', function(e){console.error(e)})
       onStream(status.fileName, inflateStream)
     } else if(status.compressionType == 0) { // uncompressed, YISS!!
       onStream(status.fileName, status.stream)
@@ -74,22 +85,23 @@ CbzApp.prototype.onFile = function(url, data){
     if(mime){
       var buf = []
       stream.on('data', function(data){
-        buf.push(data)
+        if(data instanceof Uint8Array)
+          buf.push(data)
+        else
+          buf.push(new Uint8Array(data))
       })
+
 
       stream.on('end', function(){
         //avoid the blob constructor arraybuffer deprecation warning
-        var offset = 0
-        var bufview = buf.map(function(buf){
-          return new Uint8Array(buf)
-        })
-        var blob = new Blob(bufview, {type: mime})
+        var blob = new Blob(buf, {type: mime})
         var fr = new FileReader()
         var s = fr.readAsDataURL(blob)
 
         fr.onload = function(e){
           var result = fr.result
           var img = new Image();
+          img.title = filename
 
           img.src = result
           _this.viewer.emit('image', img)

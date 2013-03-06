@@ -1,6 +1,6 @@
 {
   "name": "cbz-browser-app",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Browserify scripts for cbz-web",
   "main": "index.js",
   "scripts": {
@@ -16,10 +16,10 @@
     "dot": "~1.0.1",
     "jquest": "0.0.1",
     "global": "~0.1.5",
-    "zlib-browserify": "0.0.1",
     "mkee": "0.0.0",
     "msgpack-js-browser": "~0.1.3",
-    "filesocket-client": "0.0.0"
+    "pkzip-parser" : "~0.1.0",
+    "inflate-stream" : "~0.1.0"
   },
   "devDependencies": {}
 }

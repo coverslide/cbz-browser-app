@@ -1,4 +1,5 @@
 var parseUrl = require('url').parse
+var jquest = require('jquest')
 var WSFTPClient = require('wsftp-client')
 
 var document = require('global/document')
@@ -17,14 +18,12 @@ function Browser(options){
 
   this.element.innerHTML = this.templates.main()
 
-  this.clickHandler = this.onClick.bind(this)
-  this.cache = {}
   this.firstLoad = true
 
   this.fsclient = new WSFTPClient(options.wsftp || ('ws://' + window.location.host + '/comics'))
   this.requestDirectory(this.element, '/')
 
-  this.element.addEventListener('click', this.clickHandler, false)
+  this.element.addEventListener('click', this.clickHandler.bind(this), false)
 
   var _this = this
 }
@@ -32,8 +31,6 @@ function Browser(options){
 Browser.prototype.helpers = {bytes: bytes}
 
 Browser.prototype.requestDirectory = function(parent, url){
-  if(url in this.cache)
-    return cb(null, parent, url, this.cache[url])
   var _this = this
   this.fsclient.request(url, function(err, stat, stats){
     if(err) return cb(err)
@@ -47,7 +44,6 @@ Browser.prototype.requestDirectory = function(parent, url){
       var sort_cmp = [file.type == 'directory' ? 1 : 2]
       return sort_cmp.concat(naturalComparison(file.name.toUpperCase()))
     })
-    _this.cache[url] = files
     cb(err, parent, url, files)
   })
 
@@ -72,11 +68,11 @@ function naturalComparison(str){
   })
 }
 
-Browser.prototype.requestFile = function(url){
+Browser.prototype.requestFileChunk = function(url, file, start, end){
   var _this = this
-  if(url in _this.cache)
-    _this.emit('file', url, _this.cache[url])
-  this.fsclient.request(url, function(err, stat, stream){
+  start = +start
+  end = +end
+  this.fsclient.request(url, {start: start, end: start + end}, function(err, stat, stream){
     if(err) return _this.emit('error', err)
     var data = {
       stat: stat
@@ -86,7 +82,16 @@ Browser.prototype.requestFile = function(url){
   })
 }
 
-Browser.prototype.onClick = function(e){
+Browser.prototype.requestFile = function(url, options){
+  var _this = this
+
+  jquest('/cbz-info?file=' + encodeURIComponent(url), function(err, data){
+    if(err) return console.error(err)
+    _this.emit('filestat', url, data)
+  })
+}
+
+Browser.prototype.clickHandler = function(e){
   e.preventDefault()
   var target = e.target
   while(target.parentNode && (target.getAttribute('data-url') == null || target.className == 'browser-root')){

@@ -15,15 +15,15 @@ function Toolbar(options){
 
   var _this = this
   this.btnBrowser.onclick = function(e){
-    _this.toggleBrowser()
+    _this.toggleBrowser(status)
   }
 
   this.btnQueue.onclick = function(e){
-    _this.toggleQueue()
+    _this.toggleQueue(status)
   }
 }
 
-Toolbar.prototype.toggleBrowser = function(){
+Toolbar.prototype.toggleBrowser = function(status){
   var classes = this.parent.className.trim().split(/\s+/g)
   var i = classes.indexOf('browser')
   if(i > -1){
