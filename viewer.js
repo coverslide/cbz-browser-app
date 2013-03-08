@@ -1,3 +1,5 @@
+'use strict'
+
 var document = require('global/document')
 var doT = require('dot')
 
@@ -6,22 +8,30 @@ require('mkee')(Viewer)
 module.exports = Viewer
 
 function Viewer(options, id){
-
   this.element = document.getElementById(options.prefix + '-viewer')
-  
-  var _this = this
-  this.on('image', function(img){
-    img.onclick = function(){
-      window.open(img.src, "_blank")
-    }
-    this.element.appendChild(img)
-  })
-
 }
 
+Viewer.prototype.setImage = function(url, filename, cbzFilename){
+  this.clear()
+  var image = document.createElement('img')
+  if(filename)
+    image.title = filename
+  if(cbzFilename)
+    image.title += '\n -- ' + cbzFilename
+
+  image.src = url
+  image.className = 'image'
+
+  this.element.appendChild(image)
+}
+
+Viewer.prototype.clear = function(){
+  var cn = this.element.childNodes
+  for(var i = cn.length - 1;i>=0;i--){
+    this.element.removeChild(cn[i])
+  }
+}
+
+
 Viewer.prototype.templates = {
-  main: doT.compile(''
-  +'<div>'
-  +'</div>'
-  )
 }

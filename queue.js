@@ -1,7 +1,8 @@
+'use strict'
+
 var document = require('global/document')
 var doT = require('dot')
 var bytes = require('bytes')
-var sort_by = require('sort_by').bindToNative()
 
 module.exports = Queue
 
@@ -14,34 +15,87 @@ function Queue(options){
   this.currentEl = this.element.querySelector('.current-file-contents')
 
   this.currentEl.addEventListener('click', this.onCurrentFileClick.bind(this), false)
-  
-  this.on('filestream', this.onFileStream.bind(this))
-  this.on('filestat', this.onFileStat.bind(this))
+
+  this.currentFile = null
+  this.currentIndex = 0
 }
 
 Queue.prototype.onCurrentFileClick = function(e){
   var target = e.target
-  while(!target.getAttribute('data-archive-filename') && target.parentNode && target != this.currentEl)
+  while(!target.getAttribute('data-file-index') && target.parentNode && target != this.currentEl)
     target = target.parentNode
 
-  var archiveFilename = target.getAttribute('data-archive-filename')
+  var fileIndex = target.getAttribute('data-file-index')
 
-  if(archiveFilename){
-    var offset = target.getAttribute('data-offset')
-    var length = target.getAttribute('data-length')
-    var filename = target.getAttribute('data-filename')
-    this.emit('filechunk', archiveFilename, filename, offset, length)
+  if(fileIndex){
+    this.requestFileChunk(fileIndex)
   }
 }
 
-Queue.prototype.onFileStat = function(filename, data){
-  var html = this.templates.filestat({
-    filename: filename
-    , files: data.files//.filter(function(s){return s.filename.match(/\.(jpg|jpeg|bmp|png|gif)$/)}).sort_by(function(s){return s.filename.split('/').reverse()[0].toUpperCase()})
-  })
-  this.currentEl.innerHTML = html
+Queue.prototype.requestFileChunk = function(fileIndex){
+  this.currentIndex = fileIndex
+  this.emit('filechunk-request', fileIndex)
 }
 
+Queue.prototype.startChunkRequest = function(url, id, length, stream){
+  var _this = this
+  var downloaded = 0
+  if(this.currentFile == url){
+    var node = this.currentEl.querySelector('[data-file-index="' + id + '"]')
+  }
+  if(node){
+    var progressEl = node.querySelector('.cbz-file-progress')
+  }
+  if(progressEl){
+    progressEl.max = length
+    stream.on('data', function(data){
+      downloaded += data.length
+      if(_this.currentFile == url){
+        progressEl.style.opacity = .2 + (downloaded / length) * .8
+        progressEl.value = downloaded
+      }
+    })
+
+    //values don't always match up
+    stream.on('end', function(){
+      progressEl.value = progressEl.max
+    })
+  }
+}
+
+Queue.prototype.showComicFile = function(url, request, files){
+  var _this = this
+  this.currentEl.innerHTML = this.templates.filestat({filename:url.split('/').pop()})
+  
+  var elFileList = this.currentEl.querySelector('.current-file-list')
+
+  var currIndex = 0
+
+  this.currentFile = url
+
+  if(files) appendFiles(files)
+
+  if(request){
+    request.on('files', appendFiles)
+    request.on('file', appendFile)
+  }
+
+  function appendFiles(files){
+    files.forEach(appendFile)
+  }
+
+  this.currentEl.setAttribute('data-url', url)
+
+  function appendFile(file){
+    var filename = file.header.fileName.split('/').pop()
+    var row = document.createElement('li')
+    row.innerHTML = _this.templates.file({filename: filename})
+    row.setAttribute('data-file-index', currIndex++)
+    elFileList.appendChild(row)
+  }
+}
+
+/*
 Queue.prototype.onFileStream = function onFileStream(path, stat, stream){
 
   var startTime = +(new Date)
@@ -95,6 +149,7 @@ Queue.prototype.onFileStream = function onFileStream(path, stat, stream){
     elapsedEl.innerHTML = elapsed_min + ' m ' + elapsed_sec + ' s '
   })
 }
+*/
 
 Queue.prototype.templates = {
   main: doT.compile(''
@@ -102,20 +157,17 @@ Queue.prototype.templates = {
   +'  <div class="current-file-title">Current File</div>'
   +'  <div class="current-file-contents"></div>'
   +'</div>'
-  +'<div class="download-queue">'
-  +'  <div class="queue-title">Downloads</div>'
-  +'  <ul></ul>'
-  +'</div>'
   )
   , filestat: doT.compile(''
   +'<div>'
   +'  <div class="current-filename">{{=it.filename}}</div>'
   +'  <ol class="current-file-list">'
-  +'    {{~ it.files :file:index}}'
-  +'      <li data-order="{{=index}}" data-archive-filename="{{=it.filename}}" data-filename="{{=file.filename}}" data-offset="{{=file.offset}}" data-length="{{=file.length}}">{{=file.filename.split("/").reverse()[0]}}</li>'
-  +'    {{~}}'
   +'  </ol>'
   +'</div>'
+  )
+  , file: doT.compile(''
+  +'<div class="cbz-file-name">{{! it.filename }}</div>'
+  +'<progress class="cbz-file-progress" value="0" max="1" ></progress>'
   )
   , progress: doT.compile(''
   +'<div>'
