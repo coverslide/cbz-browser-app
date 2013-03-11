@@ -57,12 +57,15 @@ Viewer.prototype.onTouchMove = function(e){
 Viewer.prototype.onMouseWheel = function(e){
   if(e.shiftKey){
     e.preventDefault()
-    if(this.currentZoom){
+    if(this.currentZoom !== null){
       var delta = e.wheelDeltaY || e.deltaY
       if(delta > 0){
         this.currentZoom += 2
       } else if(delta < 0){
         this.currentZoom -= 2
+      }
+      if(this.currentZoom < 0){
+        this.currentZoom = 0
       }
       var image = this.element.querySelector('.image')
       if(image)
