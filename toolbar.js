@@ -121,7 +121,7 @@ Toolbar.prototype.setBrowserVisibility = function(visibility){
   var shown = this.isBrowserShown()
   if(visibility && !shown){
     classNames.push('browser')
-    this.parent.className = classNames.join(' ')
+    this.parent.className = classNames.join(' ').replace(/\s*queue\s*/,'')
   } else if(!visibility && shown) {
     this.parent.className = classNames.join(' ').replace(/\s*browser\s*/, '')
   }
@@ -162,7 +162,7 @@ Toolbar.prototype.setQueueVisibility = function(visibility){
   var shown = this.isQueueShown()
   if(visibility && !shown){
     classNames.push('queue')
-    this.parent.className = classNames.join(' ')
+    this.parent.className = classNames.join(' ').replace(/\s*browser\s*/,'')
   } else if(!visibility && shown) {
     this.parent.className = classNames.join(' ').replace(/\s*queue\s*/, '')
   }

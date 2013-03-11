@@ -18,6 +18,8 @@ function Browser(options){
   this.element.innerHTML = this.templates.main()
 
   this.element.addEventListener('click', this.clickHandler.bind(this), false)
+
+  this.currentPath = null
 }
 
 Browser.prototype.helpers = {
@@ -25,26 +27,18 @@ Browser.prototype.helpers = {
   , path: path
 }
 
-Browser.prototype.streamDirectory = function(url, request){
+Browser.prototype.streamDirectory = function(filepath, request){
   var _this = this
-  this.streams[url] = {stream:request, files: []}
-  var parent = this.getFileElement(url)
+  var parent = this.getFileElement(filepath)
   var children = parent.querySelector('.directory-children')
-  request.on('error', function(err){
-    _this.streams[url] = null
-    _this.emit('status-message', err)
-  })
-  request.on('end', function(){
-    _this.streams[url] = null
-  })
-  request.on('filestat', function(data){
+  request.on('data', function(data){
     //arrange on file rows
-    var directory = data.directory
+    var directory = data.isdir
     if(!directory && !data.filename.match(/\.cbz$/i)) return
     var row = document.createElement('li')
-    row.innerHTML = _this.templates.listing.call(_this, {root:url, filename:data.filename,stat:data.stat,directory:data.directory})
-    row.setAttribute('data-url', path.join(url, data.filename))
-    row.setAttribute('data-type', data.directory ? "directory" : "file")
+    row.innerHTML = _this.templates.listing.call(_this, {root:filepath, filename:data.filename,stat:data.stat,isdir:data.isdir})
+    row.setAttribute('data-url', path.join(filepath, data.filename))
+    row.setAttribute('data-type', directory ? "directory" : "file")
     row.className = "browser-item browser-"+ ( directory ? "directory" : "file" )
     for(var i = 0, l = children.children.length;i<l;i++){
       var child = children.children[i]
@@ -69,31 +63,16 @@ function compare(f1, f2){
   for(var i=0,l=c1.length;i<l;i++){
     var a = c1[i]
     var b = c2[i]
-    if(typeof c == 'string' || typeof d == 'string')
-      a=''+a,b=''+b
-    var val = a < b ? -1 :  a > b ? 1 : 0
+    var atype = typeof a
+    var btype = typeof b
+    if(atype != btype)
+      var val = atype < btype ? -1 :  atype > btype ? 1 : 0
+    else
+      var val = a < b ? -1 :  a > b ? 1 : 0
     if(val != 0)
       return val
   }
   return 0
-}
-
-Browser.prototype.showDirectory = function(url, files){
-  var parent = this.getFileElement(url)
-  if(parent){
-    var children = Object.keys(files).map(function(name){
-      var file = files[name].stat
-      file.name = name
-      return file
-    }).filter(function(file){
-      return file.type == 'directory' || file.name.match(/\.cbz$/)
-    }).sort_by(function(file){
-      var sort_cmp = [file.type == 'directory' ? 1 : 2]
-      return sort_cmp.concat(naturalComparison(file.name.toUpperCase()))
-    })
-    parent.setAttribute('data-opened', true)
-    parent.querySelector('.directory-children').innerHTML = this.templates.listing.call(this, {root:url, files:children})
-  }
 }
 
 function naturalComparison(str){
@@ -129,10 +108,6 @@ Browser.prototype.clickHandler = function(e){
 }
 
 Browser.prototype.hideDirectory = function(url){
-  if(this.streams[url]){
-    this.streams[url].stream.removeAllListeners()
-    this.streams[url] = null
-  }
   var target = this.getFileElement(url)
   if(target){
     target.querySelector('.directory-children').innerHTML = ''
@@ -154,6 +129,18 @@ Browser.prototype.requestDirectory = function(url){
 }
 
 Browser.prototype.requestFile = function(url){
+  if(this.currentPath){
+    var oldEl = this.getFileElement(this.currentPath)
+    if(oldEl){
+      oldEl.querySelector('.browser-item-name').className = oldEl.className.replace(/\s*selected\s*/g,'')
+    }
+  }
+  var nameEl = this.getFileElement(url).querySelector('.browser-item-name')
+  if(nameEl)
+    nameEl.className += " selected"
+
+  this.currentPath = url
+
   this.emit('file-request', url)
 }
 
@@ -168,7 +155,7 @@ Browser.prototype.templates = {
   +'<div>'
   +'  <span class="browser-item-icon"></span>'
   +'  <span class="browser-item-name">{{! it.filename }}</span>'
-  +'  {{? !it.directory }}'
+  +'  {{? !it.isdir }}'
   +'    <span class="browser-item-stat">{{! this.helpers.bytes(it.stat.size) }}</span>'
   +'  {{??}}'
   +'    <ul class="directory-children"></ul>'
