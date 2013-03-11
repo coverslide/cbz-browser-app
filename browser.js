@@ -132,7 +132,8 @@ Browser.prototype.requestFile = function(url){
   if(this.currentPath){
     var oldEl = this.getFileElement(this.currentPath)
     if(oldEl){
-      oldEl.querySelector('.browser-item-name').className = oldEl.className.replace(/\s*selected\s*/g,'')
+      var oldNameEl = oldEl.querySelector('.browser-item-name')
+      oldNameEl.className = oldNameEl.className.replace(/\s*selected\s*/g,'')
     }
   }
   var nameEl = this.getFileElement(url).querySelector('.browser-item-name')
