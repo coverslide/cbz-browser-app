@@ -46,7 +46,7 @@ Viewer.prototype.onTouchMove = function(e){
   if(touches.length >= 2){
     e.preventDefault()
     var dist = distance(touches[0],touches[1])
-    var newZoom = _this.startZoom * (dist / this.startDistance)
+    var newZoom = this.startZoom * (dist / this.startDistance)
     this.currentZoom = newZoom
     var image = this.element.querySelector('.image')
     if(image)
@@ -58,7 +58,7 @@ Viewer.prototype.onMouseWheel = function(e){
   if(e.shiftKey){
     e.preventDefault()
     if(this.currentZoom !== null){
-      var delta = e.wheelDeltaY || e.deltaY
+      var delta = e.wheelDelta || e.deltaY || e.deltaX
       if(delta > 0){
         this.currentZoom += 2
       } else if(delta < 0){
