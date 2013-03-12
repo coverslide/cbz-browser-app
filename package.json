@@ -15,7 +15,6 @@
     "global": "~0.1.5",
     "mkee": "0.0.0",
     "browserify-fullscreen": "0.0.0",
-    "mkstream": "0.0.0",
     "browserify-mime": "~1.2.9",
     "json-chunk-reader": "0.0.0"
   },
