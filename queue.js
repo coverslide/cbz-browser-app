@@ -78,15 +78,15 @@ Queue.prototype.showFileContents = function(path, request){
 
   function appendFile(file){
     if(_this.currentFile == path){
-      var filename = file.header.fileName.split('/').pop()
+      var filename = file.filename.split('/').pop()
       if(filename){
         var type = mime.lookup(filename)
         if(type.match(/^image\//)){ 
           var row = document.createElement('li')
           row.appendChild(document.createTextNode(filename))
           row.setAttribute('data-index', index)
-          row.setAttribute('data-offset', file.position.offset)
-          row.setAttribute('data-end', file.position.offset + file.position.length)
+          row.setAttribute('data-offset', file.offset)
+          row.setAttribute('data-end', file.end)
           row.setAttribute('data-filename', filename)
           _this.fileListEl.appendChild(row)
           _this.element.setAttribute('data-count', index)
