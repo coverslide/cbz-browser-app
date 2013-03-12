@@ -76,7 +76,7 @@ function compare(f1, f2){
 }
 
 function naturalComparison(str){
-  var re = /[^\d\.]+|[\w\.]+/g
+  var re = /[\d\.]+|[\D\.]+/g
   var match = str.match(re)
   return match.map(function(v){
     var floatVal = parseFloat(v)
