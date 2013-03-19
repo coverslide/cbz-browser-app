@@ -33,12 +33,6 @@ function CbzApp(options){
   this.browser = new Browser(options)
   this.queue = new Queue(options)
 
-  this.browser.on('status-message', this.addMessage.bind(this))
-  this.viewer.on('status-message', this.addMessage.bind(this))
-  this.queue.on('status-message', this.addMessage.bind(this))
-  this.toolbar.on('status-message', this.addMessage.bind(this))
-  this.on('status-message', this.addMessage.bind(this))
-
   this.browser.on('directory-request', this.directoryHandler.bind(this))
   this.browser.on('file-request', this.fileHandler.bind(this))
 
@@ -52,10 +46,6 @@ function CbzApp(options){
 
   this.toolbar.setBrowserVisibility(true)
   this.browser.requestDirectory('/')
-}
-
-CbzApp.prototype.addMessage = function(message){
-  this.toolbar.addMessage(message)
 }
 
 CbzApp.prototype.directoryHandler = function(path){
