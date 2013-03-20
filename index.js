@@ -46,6 +46,7 @@ function CbzApp(options){
   this.toolbar.on('request-next', this.requestNext.bind(this))
   this.toolbar.on('request-prev', this.requestPrev.bind(this))
 
+  this.firstLoad = true
   this.toolbar.setBrowserVisibility(true)
   this.browser.requestDirectory('/')
 
@@ -65,11 +66,13 @@ CbzApp.prototype.navigateToHash = function(hash){
   var path = decodeURIComponent(permalink[0])
   var index = permalink[1]
 
-  this.drillDown(path, index)
+  this.drillDown(path, +index || 1)
 }
 
 CbzApp.prototype.drillDown = function(path, index){
   var _this = this
+  if(this.queue.currentFile == path) return this.firstLoad = false, this.queue.selectFileAtIndex(index - 1)
+
   var sections = path.split('/')
 
   for(var i = sections.length; i > 1 ; i--){
@@ -81,33 +84,36 @@ CbzApp.prototype.drillDown = function(path, index){
 
       //zoom in on this element
       // TODO: organize this better
-      var browserElement = this.browser.element
-      var beHeight = browserElement.offsetHeight
-      var beScroll = browserElement.scrollTop
-      var elementTop = function(){
-        var currentElement = element
-        var currentTop = 0
-        do{
-          currentTop += currentElement.offsetTop
-          currentElement = currentElement.offsetParent
-        }while(currentElement != browserElement)
+      if(this.firstLoad){
+        var browserElement = this.browser.element
+        var beHeight = browserElement.offsetHeight
+        var beScroll = browserElement.scrollTop
+        var elementTop = function(){
+          var currentElement = element
+          var currentTop = 0
+          do{
+            currentTop += currentElement.offsetTop
+            currentElement = currentElement.offsetParent
+          }while(currentElement != browserElement)
 
-        return currentTop
-      }()
+          return currentTop
+        }()
 
-      browserElement.scrollTop = elementTop
+        browserElement.scrollTop = elementTop
+      }
 
       if(elementType == 'file'){
         this.queue.once('file-request-finished', function(){
-          _this.queue.selectFileAtIndex(index - 1)
+          _this.drillDown(path, index)
         })
-        this.browser.requestFile(newPath)
+        this.browser.requestFile(newPath, true)
       } else if(elementType == 'directory' && !elementOpen){
         this.browser.once('directory-request-finished', function(){
           _this.drillDown(path, index)
         })
         this.browser.requestDirectory(newPath)
       }
+      this.firstLoad = false
       break
     }
   }

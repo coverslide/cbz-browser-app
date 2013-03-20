@@ -31,8 +31,12 @@ Queue.prototype.onCurrentFileClick = function(e){
   }
 
   if(typeof index != 'undefined' && index != null){
-    this.selectFileAtIndex(+index)
+    this.chooseFileAtIndex(+index)
   }
+}
+
+Queue.prototype.chooseFileAtIndex = function(index){
+  window.location.hash = '#' + this.currentFile + '::' + (+index + 1)
 }
 
 Queue.prototype.selectFileAtIndex = function(index){
@@ -95,9 +99,6 @@ Queue.prototype.showFileContents = function(path, request){
           _this.element.setAttribute('data-count', index)
           _this.emit('entry-added', path, index)
           index++
-          if(_this.currentIndex === null){
-            _this.selectFileAtIndex(0)
-          }
         }
       }
     }
@@ -105,11 +106,11 @@ Queue.prototype.showFileContents = function(path, request){
 }
 
 Queue.prototype.requestNext = function(){
-  this.selectFileAtIndex(this.currentIndex + 1)
+  this.chooseFileAtIndex(this.currentIndex + 1)
 }
 
 Queue.prototype.requestPrev= function(){
-  this.selectFileAtIndex(this.currentIndex - 1)
+  this.chooseFileAtIndex(this.currentIndex - 1)
 }
 
 Queue.prototype.templates = {
