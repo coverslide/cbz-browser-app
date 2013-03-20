@@ -54,6 +54,10 @@ Browser.prototype.streamDirectory = function(filepath, request){
     }
     children.appendChild(row)
   })
+
+  request.on('end', function(){
+    _this.emit('directory-request-finished')
+  })
 }
 
 function compare(f1, f2){
@@ -149,7 +153,7 @@ Browser.prototype.templates = {
   main: doT.compile(''
   +'<div class="url"></div>'
   +'<div data-url="/" class="browser-root">'
-  +'  <ul class="directory-children"></ul>'
+  +'  <ol class="directory-children"></ol>'
   +'</div>'
   )
   , listing: doT.compile(''
@@ -159,7 +163,7 @@ Browser.prototype.templates = {
   +'  {{? !it.isdir }}'
   +'    <span class="browser-item-stat">{{! this.helpers.bytes(it.stat.size) }}</span>'
   +'  {{??}}'
-  +'    <ul class="directory-children"></ul>'
+  +'    <ol class="directory-children"></ol>'
   +'  {{?}}'
   +'</div>'
   )

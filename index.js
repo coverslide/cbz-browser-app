@@ -10,6 +10,7 @@ var Toolbar = require('./toolbar')
 var Viewer = require('./viewer')
 var Browser = require('./browser')
 var Queue = require('./queue')
+var window = require('global/window')
 
 require('mkee')(CbzApp)
 
@@ -17,6 +18,7 @@ require('mkee')(CbzApp)
 function CbzApp(options){
   this.options = options
   options.prefix = options.prefix || 'cbz-app'
+  options.hashchange = 'onhashchange' in window
 
   this.parentElement = options.parentElement
 
@@ -46,6 +48,69 @@ function CbzApp(options){
 
   this.toolbar.setBrowserVisibility(true)
   this.browser.requestDirectory('/')
+
+  window.addEventListener('hashchange', this.onHashChange.bind(this))
+
+  if(window.location.hash){
+    this.browser.once('directory-request-finished', this.onHashChange.bind(this))
+  }
+}
+
+CbzApp.prototype.onHashChange = function(e){
+  this.navigateToHash(window.location.hash)
+}
+
+CbzApp.prototype.navigateToHash = function(hash){
+  var permalink = hash.slice(1).split('::')
+  var path = decodeURIComponent(permalink[0])
+  var index = permalink[1]
+
+  this.drillDown(path, index)
+}
+
+CbzApp.prototype.drillDown = function(path, index){
+  var _this = this
+  var sections = path.split('/')
+
+  for(var i = sections.length; i > 1 ; i--){
+    var newPath = sections.slice(0, i).join('/')
+    var element = this.browser.getFileElement(newPath)
+    if(element){
+      var elementType = element.getAttribute('data-type')
+      var elementOpen = element.getAttribute('data-opened')
+
+      //zoom in on this element
+      // TODO: organize this better
+      var browserElement = this.browser.element
+      var beHeight = browserElement.offsetHeight
+      var beScroll = browserElement.scrollTop
+      var elementTop = function(){
+        var currentElement = element
+        var currentTop = 0
+        do{
+          currentTop += currentElement.offsetTop
+          currentElement = currentElement.offsetParent
+        }while(currentElement != browserElement)
+
+        return currentTop
+      }()
+
+      browserElement.scrollTop = elementTop
+
+      if(elementType == 'file'){
+        this.queue.once('file-request-finished', function(){
+          _this.queue.selectFileAtIndex(index - 1)
+        })
+        this.browser.requestFile(newPath)
+      } else if(elementType == 'directory' && !elementOpen){
+        this.browser.once('directory-request-finished', function(){
+          _this.drillDown(path, index)
+        })
+        this.browser.requestDirectory(newPath)
+      }
+      break
+    }
+  }
 }
 
 CbzApp.prototype.directoryHandler = function(path){
@@ -54,6 +119,7 @@ CbzApp.prototype.directoryHandler = function(path){
   var request = http.get({path:url}, function(res){
     var jsonChunkReader = new JsonChunkReader
     res.pipe(jsonChunkReader)
+    _this.toolbar.setBrowserVisibility(true)
     _this.browser.streamDirectory(path, jsonChunkReader)
   })
 }

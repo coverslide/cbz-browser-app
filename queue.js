@@ -74,6 +74,9 @@ Queue.prototype.showFileContents = function(path, request){
   this.emit('file-selected', path)
   
   request.on('data', appendFile)
+  request.on('end', function(){
+    _this.emit('file-request-finished', path)
+  })
   var index = 0
 
   function appendFile(file){
