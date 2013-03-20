@@ -36,7 +36,10 @@ Queue.prototype.onCurrentFileClick = function(e){
 }
 
 Queue.prototype.chooseFileAtIndex = function(index){
-  window.location.hash = '#' + this.currentFile + '::' + (+index + 1)
+  index = +index + 1
+  var row = this.fileListEl.querySelector('[data-index="' + index + '"]')
+  if(row)
+  window.location.hash = '#' + this.currentFile + '::' + (index)
 }
 
 Queue.prototype.selectFileAtIndex = function(index){
