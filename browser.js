@@ -36,7 +36,7 @@ Browser.prototype.streamDirectory = function(filepath, request){
     var directory = data.isdir
     if(!directory && !data.filename.match(/\.cbz$/i)) return
     var row = document.createElement('li')
-    row.innerHTML = _this.templates.listing.call(_this, {root:filepath, filename:data.filename,stat:data.stat,isdir:data.isdir})
+    row.innerHTML = _this.templates.listing.call(_this, {root:filepath, filename:data.filename,size:data.size,isdir:data.isdir})
     row.setAttribute('data-url', path.join(filepath, data.filename))
     row.setAttribute('data-type', directory ? "directory" : "file")
     row.className = "browser-item browser-"+ ( directory ? "directory" : "file" )
@@ -162,7 +162,7 @@ Browser.prototype.templates = {
   +'  <span class="browser-item-icon"></span>'
   +'  <span class="browser-item-name">{{! it.filename }}</span>'
   +'  {{? !it.isdir }}'
-  +'    <span class="browser-item-stat">{{! this.helpers.bytes(it.stat.size) }}</span>'
+  +'    <span class="browser-item-stat">{{! this.helpers.bytes(it.size) }}</span>'
   +'  {{??}}'
   +'    <ol class="directory-children"></ol>'
   +'  {{?}}'
