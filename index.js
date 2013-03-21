@@ -53,15 +53,21 @@ function CbzApp(options){
     this.firstLoad = true
     this.browser.once('directory-request-finished', this.onHashChange.bind(this))
   } else {
-    if(localStorage){
-      var lastPage = localStorage[options.prefix + '-last-page']
-      if(lastPage){
-        var confirmation = confirm('Continue from last page:\n' + lastPage.replace(/\//g,'\n\t').replace('::','\n\n\tPage: '))
-        if(confirmation){
-          this.browser.once('directory-request-finished', function(){
-            window.location.hash = '#' + lastPage
-          })
-        }
+    var lastPage = function(){
+      return document.cookie.split(';').map(function(x){
+        return x.split('=')
+      }).filter(function(x){
+        return x[0] == 'last-page'
+      }).map(function(x){
+        return decodeURIComponent(x[1])
+      })[0]
+    }()
+    if(lastPage){
+      var confirmation = confirm('Continue from last page:\n\n\t' + lastPage.slice(1).replace(/\//g,'/\n\t').replace('::','\n\n\tPage: '))
+      if(confirmation){
+        this.browser.once('directory-request-finished', function(){
+          window.location.hash = '#' + lastPage
+        })
       }
     }
   }
@@ -72,7 +78,7 @@ function CbzApp(options){
 
 CbzApp.prototype.onHashChange = function(e){
   var hash = window.location.hash.slice(1)
-  if(localStorage) localStorage[this.options.prefix + '-last-page'] = hash
+  document.cookie = 'last-page=' + encodeURIComponent(hash)
   this.navigateToHash(hash)
 }
 
