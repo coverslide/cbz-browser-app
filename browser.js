@@ -103,8 +103,7 @@ Browser.prototype.clickHandler = function(e){
       if(opened){
         this.hideDirectory(url)
       } else {
-        window.location.hash = '#' + url
-        //this.requestDirectory(url)
+        this.requestDirectory(url)
       }
     } else if(type == 'file'){
       window.location.hash = '#' + url

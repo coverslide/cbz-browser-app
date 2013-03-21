@@ -46,23 +46,38 @@ function CbzApp(options){
   this.toolbar.on('request-next', this.requestNext.bind(this))
   this.toolbar.on('request-prev', this.requestPrev.bind(this))
 
-  this.firstLoad = true
+
+  if(options.hashchange) window.addEventListener('hashchange', this.onHashChange.bind(this), false)
+  
+  if(window.location.hash){
+    this.firstLoad = true
+    this.browser.once('directory-request-finished', this.onHashChange.bind(this))
+  } else {
+    if(localStorage){
+      var lastPage = localStorage[options.prefix + '-last-page']
+      if(lastPage){
+        var confirmation = confirm('Continue from last page:\n' + lastPage.replace(/\//g,'\n\t').replace('::','\n\n\tPage: '))
+        if(confirmation){
+          this.browser.once('directory-request-finished', function(){
+            window.location.hash = '#' + lastPage
+          })
+        }
+      }
+    }
+  }
+
   this.toolbar.setBrowserVisibility(true)
   this.browser.requestDirectory('/')
-
-  window.addEventListener('hashchange', this.onHashChange.bind(this))
-
-  if(window.location.hash){
-    this.browser.once('directory-request-finished', this.onHashChange.bind(this))
-  }
 }
 
 CbzApp.prototype.onHashChange = function(e){
-  this.navigateToHash(window.location.hash)
+  var hash = window.location.hash.slice(1)
+  if(localStorage) localStorage[this.options.prefix + '-last-page'] = hash
+  this.navigateToHash(hash)
 }
 
 CbzApp.prototype.navigateToHash = function(hash){
-  var permalink = hash.slice(1).split('::')
+  var permalink = hash.split('::')
   var path = decodeURIComponent(permalink[0])
   var index = permalink[1]
 
