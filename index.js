@@ -162,8 +162,8 @@ CbzApp.prototype.fileHandler = function(path){
   })
 }
 
-CbzApp.prototype.fileChunkHandler = function(path, filename, offset, end){
-  this.viewer.viewFile(path, filename, offset, end)
+CbzApp.prototype.fileChunkHandler = function(path, filename, cd){
+  this.viewer.viewFile(path, filename, cd)
 }
 
 CbzApp.prototype.fileSelected = function(path){

@@ -53,11 +53,10 @@ Queue.prototype.selectFileAtIndex = function(index){
     this.currentIndex = index
     var path = this.element.getAttribute('data-path')
     var count = this.element.getAttribute('data-count')
-    var offset = row.getAttribute('data-offset')
-    var end = row.getAttribute('data-end')
+    var cd = row.getAttribute('data-cd')
     var filename = row.getAttribute('data-filename')
-    if(path && offset && filename){
-      this.emit('filechunk-request', path, filename, offset, end)
+    if(path && cd && filename){
+      this.emit('filechunk-request', path, filename, cd)
     }
     this.emit('entry-selected', path, filename, index, count)
   }
@@ -94,8 +93,7 @@ Queue.prototype.showFileContents = function(path, request){
           var row = document.createElement('li')
           row.appendChild(document.createTextNode(filename))
           row.setAttribute('data-index', index)
-          row.setAttribute('data-offset', file.offset)
-          row.setAttribute('data-end', file.end)
+          row.setAttribute('data-cd', file.cd)
           row.setAttribute('data-filename', filename)
           _this.fileListEl.appendChild(row)
           _this.element.setAttribute('data-count', index)

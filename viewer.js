@@ -78,12 +78,12 @@ function distance(a, b){
   return Math.pow(Math.pow(a.pageX - b.pageX, 2) + Math.pow(a.pageY - b.pageY, 2), .5)
 }
 
-Viewer.prototype.viewFile = function(path, filename, offset, end){
+Viewer.prototype.viewFile = function(path, filename, cd){
   var type = mime.lookup(filename)
 
   this.clear()
 
-  var url = '/cbz-file?path=' + encodeURIComponent(path) + '&offset=' + offset + '&end=' + end
+  var url = '/cbz-file?path=' + encodeURIComponent(path) + '&cd=' + cd
 
   if(type.match(/^image\//)){
     this.currentZoom = 100
