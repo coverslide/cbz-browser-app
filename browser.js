@@ -37,7 +37,7 @@ Browser.prototype.streamDirectory = function(filepath, request){
     if(!directory && !data.filename.match(/\.cbz$/i)) return
     var row = document.createElement('li')
     row.innerHTML = _this.templates.listing.call(_this, {root:filepath, filename:data.filename,size:data.size,isdir:data.isdir})
-    row.setAttribute('data-url', path.join(filepath, data.filename))
+    row.setAttribute('data-url', path.join(filepath, data.filename).replace(/'/g,'&apos;').replace(/"/g,'&quot;'))
     row.setAttribute('data-type', directory ? "directory" : "file")
     row.className = "browser-item browser-"+ ( directory ? "directory" : "file" )
     for(var i = 0, l = children.children.length;i<l;i++){
@@ -99,6 +99,10 @@ Browser.prototype.clickHandler = function(e){
     var type = target.getAttribute('data-type')
     var opened = target.getAttribute('data-opened')
 
+    if(url){
+      url = url.replace(/&apos;/g, "'").replace(/&quot;/g, '"')
+    }
+
     if(type == 'directory'){
       if(opened){
         this.hideDirectory(url)
@@ -121,7 +125,7 @@ Browser.prototype.hideDirectory = function(url){
 }
 
 Browser.prototype.getFileElement = function(url){
-  return this.element.querySelector("[data-url='" + url.replace("'","\\'") + "']")
+  return this.element.querySelector("[data-url='" + url.replace(/'/g,"&apos;").replace(/"/g,'&quot;') + "']")
 }
 
 Browser.prototype.requestDirectory = function(url){
