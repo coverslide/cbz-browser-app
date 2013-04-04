@@ -102,16 +102,17 @@ Browser.prototype.clickHandler = function(e){
     if(url){
       url = url.replace(/&apos;/g, "'").replace(/&quot;/g, '"')
     }
-
+    var hashUrl = '#!' + url
     if(type == 'directory'){
       if(opened){
+        e.preventDefault();
+        e.stopPropagation()
         this.hideDirectory(url)
-      } else {
+      } else if(hashUrl == window.location.hash){
+        e.preventDefault();
+        e.stopPropagation()
         this.requestDirectory(url)
       }
-    } else if(type == 'file'){
-      window.location.hash = '#' + url
-      //this.requestFile(url)
     }
   }
 }
@@ -164,7 +165,7 @@ Browser.prototype.templates = {
   , listing: doT.compile(''
   +'<div>'
   +'  <span class="browser-item-icon"></span>'
-  +'  <span class="browser-item-name">{{! it.filename }}</span>'
+  +'  <a href="#!{{= this.helpers.path.join(it.root, it.filename) }}" class="browser-item-name">{{! it.filename }}</a>'
   +'  {{? !it.isdir }}'
   +'    <span class="browser-item-stat">{{! this.helpers.bytes(it.size) }}</span>'
   +'  {{??}}'

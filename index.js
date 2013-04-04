@@ -77,7 +77,7 @@ function CbzApp(options){
 }
 
 CbzApp.prototype.onHashChange = function(e){
-  var hash = window.location.hash.slice(1)
+  var hash = window.location.hash.replace(/^#!?/,'')
   document.cookie = 'last-page=' + encodeURIComponent(hash)
   this.navigateToHash(hash)
 }

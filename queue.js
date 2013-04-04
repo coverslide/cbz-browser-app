@@ -15,7 +15,7 @@ function Queue(options){
 
   this.fileListEl = this.element.querySelector('.current-file-list')
 
-  this.fileListEl.addEventListener('click', this.onCurrentFileClick.bind(this), false)
+  //this.fileListEl.addEventListener('click', this.onCurrentFileClick.bind(this), false)
 
   this.currentIndex = null
   this.currentFile = null
@@ -38,7 +38,7 @@ Queue.prototype.onCurrentFileClick = function(e){
 Queue.prototype.chooseFileAtIndex = function(index){
   var row = this.fileListEl.querySelector('[data-index="' + (index) + '"]')
   if(row)
-    window.location.hash = '#' + this.currentFile + '::' + (index + 1)
+    window.location.hash = '#!' + this.currentFile + '::' + (index + 1)
 }
 
 Queue.prototype.selectFileAtIndex = function(index){
@@ -91,7 +91,11 @@ Queue.prototype.showFileContents = function(path, request){
         var type = mime.lookup(filename)
         if(type.match(/^image\//)){ 
           var row = document.createElement('li')
-          row.appendChild(document.createTextNode(filename))
+          var link = document.createElement('a')
+          row.appendChild(link)
+          link.appendChild(document.createTextNode(filename))
+          link.setAttribute('href', '#!' + path + '::' + (index + 1))
+
           row.setAttribute('data-index', index)
           row.setAttribute('data-cd', file.cd)
           row.setAttribute('data-filename', filename)
