@@ -40,17 +40,14 @@ Browser.prototype.streamDirectory = function(filepath, request){
     row.setAttribute('data-url', path.join(filepath, data.filename).replace(/'/g,'&apos;').replace(/"/g,'&quot;'))
     row.setAttribute('data-type', directory ? "directory" : "file")
     row.className = "browser-item browser-"+ ( directory ? "directory" : "file" )
-    for(var i = 0, l = children.children.length;i<l;i++){
-      var child = children.children[i]
-      var isdir = child.getAttribute('data-type') == 'directory'
-      var filename = child.getAttribute('data-url').split('/').reverse()[0]
-      if(!directory && isdir)
-        continue
-      else if(directory && !isdir)
-        return children.insertBefore(row,child)
-      var comparison = compare(data.filename, filename)
-      if(comparison < 0)
-        return children.insertBefore(row,child)
+    if(directory){
+      for(var i = 0, l = children.children.length;i<l;i++){
+        var child = children.children[i]
+        var isdir = child.getAttribute('data-type') == 'directory'
+        var filename = child.getAttribute('data-url').split('/').reverse()[0]
+        if(directory && !isdir)
+          return children.insertBefore(row,child)
+      }
     }
     children.appendChild(row)
   })
