@@ -52,24 +52,6 @@ function CbzApp(options){
   if(window.location.hash){
     this.firstLoad = true
     this.browser.once('directory-request-finished', this.onHashChange.bind(this))
-  } else {
-    var lastPage = function(){
-      return document.cookie.split(';').map(function(x){
-        return x.split('=')
-      }).filter(function(x){
-        return x[0] == 'last-page'
-      }).map(function(x){
-        return decodeURIComponent(x[1])
-      })[0]
-    }()
-    if(lastPage){
-      var confirmation = confirm('Continue from last page:\n\n\t' + lastPage.slice(1).replace(/\//g,'/\n\t').replace('::','\n\n\tPage: '))
-      if(confirmation){
-        this.browser.once('directory-request-finished', function(){
-          window.location.hash = '#' + lastPage
-        })
-      }
-    }
   }
 
   this.toolbar.setBrowserVisibility(true)
@@ -77,8 +59,7 @@ function CbzApp(options){
 }
 
 CbzApp.prototype.onHashChange = function(e){
-  var hash = window.location.hash.replace(/^#!?/,'')
-  document.cookie = 'last-page=' + encodeURIComponent(hash)
+  var hash = window.location.hash.replace(/^#!/,'')
   this.navigateToHash(hash)
 }
 

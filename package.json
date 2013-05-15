@@ -1,6 +1,6 @@
 {
   "name": "cbz-browser-app",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "Browserify scripts for cbz-web",
   "main": "index.js",
   "scripts": {
@@ -16,7 +16,7 @@
     "mkee": "0.0.0",
     "browserify-fullscreen": "0.0.0",
     "browserify-mime": "~1.2.9",
-    "json-chunk-reader": "0.1.0"
+    "json-chunk-reader": "~0.1.1"
   },
   "devDependencies": {
     "browserify": "~2.13"
